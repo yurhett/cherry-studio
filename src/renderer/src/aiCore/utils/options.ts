@@ -62,6 +62,7 @@ const logger = loggerService.withContext('aiCore.utils.options')
 /**
  * Recursively remove undefined values from an object
  * This is necessary for providers like Google that don't accept undefined values
+ * Also removes empty objects that result from removing all undefined values
  */
 function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
   if (obj === null || obj === undefined) {
@@ -77,7 +78,11 @@ function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
     for (const [key, value] of Object.entries(obj)) {
       if (value !== undefined) {
         if (typeof value === 'object' && value !== null) {
-          result[key] = removeUndefinedValues(value)
+          const cleaned = removeUndefinedValues(value)
+          // Only include if the cleaned object has keys (not empty)
+          if (Array.isArray(cleaned) || Object.keys(cleaned).length > 0) {
+            result[key] = cleaned
+          }
         } else {
           result[key] = value
         }
