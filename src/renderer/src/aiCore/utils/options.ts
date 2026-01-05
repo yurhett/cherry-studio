@@ -70,7 +70,10 @@ function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => removeUndefinedValues(item)) as T
+    // Filter out undefined elements and recursively clean remaining elements
+    return obj
+      .filter((item) => item !== undefined)
+      .map((item) => (typeof item === 'object' && item !== null ? removeUndefinedValues(item) : item)) as T
   }
 
   if (typeof obj === 'object') {
@@ -79,7 +82,7 @@ function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
       if (value !== undefined) {
         if (typeof value === 'object' && value !== null) {
           const cleaned = removeUndefinedValues(value)
-          // Only include if the cleaned object has keys (not empty)
+          // Only include if the cleaned object has keys (not empty) or is an array
           if (Array.isArray(cleaned) || Object.keys(cleaned).length > 0) {
             result[key] = cleaned
           }
