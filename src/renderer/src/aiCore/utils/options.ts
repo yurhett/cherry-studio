@@ -59,6 +59,36 @@ import { getWebSearchParams } from './websearch'
 
 const logger = loggerService.withContext('aiCore.utils.options')
 
+/**
+ * Recursively remove undefined values from an object
+ * This is necessary for providers like Google that don't accept undefined values
+ */
+function removeUndefinedValues<T extends Record<string, any>>(obj: T): T {
+  if (obj === null || obj === undefined) {
+    return obj
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => removeUndefinedValues(item)) as T
+  }
+
+  if (typeof obj === 'object') {
+    const result: Record<string, any> = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        if (typeof value === 'object' && value !== null) {
+          result[key] = removeUndefinedValues(value)
+        } else {
+          result[key] = value
+        }
+      }
+    }
+    return result as T
+  }
+
+  return obj
+}
+
 function toOpenAIServiceTier(model: Model, serviceTier: ServiceTier): OpenAIServiceTier {
   if (
     !isOpenAIServiceTier(serviceTier) ||
@@ -472,10 +502,11 @@ function buildGeminiProviderOptions(
     }
   }
 
+  // Remove undefined values to prevent Google API errors
   return {
-    google: {
+    google: removeUndefinedValues({
       ...providerOptions
-    }
+    })
   }
 }
 
