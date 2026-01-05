@@ -371,6 +371,36 @@ describe('options utils', () => {
         expect(googleOptions).toHaveProperty('maxOutputTokens')
         expect(googleOptions).toHaveProperty('customOption')
       })
+
+      it('should remove empty nested objects after filtering undefined values', async () => {
+        const { getCustomParameters } = await import('../reasoning')
+        const { getGeminiReasoningParams } = await import('../reasoning')
+
+        // Mock reasoning params where all values are undefined (should result in empty thinkingConfig)
+        vi.mocked(getGeminiReasoningParams).mockReturnValue({
+          thinkingConfig: {
+            thinkingLevel: undefined,
+            thinkingBudget: undefined
+          }
+        } as any)
+
+        vi.mocked(getCustomParameters).mockReturnValue({
+          maxOutputTokens: 4096
+        })
+
+        const result = buildProviderOptions(mockAssistant, googleModel, googleProvider, {
+          enableReasoning: true,
+          enableWebSearch: false,
+          enableGenerateImage: false
+        })
+
+        const googleOptions = result.providerOptions.google
+
+        // The empty thinkingConfig should be removed entirely
+        expect(googleOptions).not.toHaveProperty('thinkingConfig')
+        expect(googleOptions).toHaveProperty('maxOutputTokens')
+        expect(googleOptions.maxOutputTokens).toBe(4096)
+      })
     })
 
     describe('xAI provider', () => {
