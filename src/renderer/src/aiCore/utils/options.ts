@@ -512,9 +512,7 @@ function buildGeminiProviderOptions(
 
   // Remove undefined values to prevent Google API errors
   return {
-    google: removeUndefinedValues({
-      ...providerOptions
-    })
+    google: removeUndefinedValues(providerOptions)
   }
 }
 
